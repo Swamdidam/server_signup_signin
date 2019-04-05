@@ -56,21 +56,38 @@ router.post("/CreateUser", function (req, res) {
 //=============================================================================================
 
 
-router.post('/loginUser',(req, res)=>{
-    
-    if (req.body.email && req.body.password)
-        User.authenticate(req.body.email, req.body.password, function (err, user) {
-            if (err) 
-                return res.json({status: 500, message: "An error occured! please check your provided details", err: err});
-            else 
-                return res.json({status:200, message:"Welcome back to home page"})
-            
-        })
-    else 
-        return res.status(400).json({info:"Both email and password are required"})
-    
+router.post('/loginUser', (req, res)=>{
+    let candidatePassword = req.body.password
+
+    // if (err) throw err;
+
+    // fetch user and test password verification
+    User.findOne({ email: req.body.email }, function(err, user) {
+        if (err) console.log("fucked up")//throw err;
+
+       // test a matching password
+        if(user){
+            user.comparePassword(candidatePassword, function(err, isMatch) {
+                if (err) throw err;
+                if(isMatch){
+                    console.log(`${user.email} welcome back`); // -> Password123: true
+                    return res.status(200).json({email:user.email});
+                }
+                else{
+                    console.log(`User account not found`)
+                    return res.status(401).json({message:"Please check Entered credentials"});
+                }
+            })
+
+        // // test a failing password
+        // bcrypt.comparePassword('123Password', function(err, isMatch) {
+        //     if (err) throw err;
+        //     console.log('No be match'); // -> 123Password: false
+        // });
+    }
 
 
+})
 })
 
 //=============================================================================================
